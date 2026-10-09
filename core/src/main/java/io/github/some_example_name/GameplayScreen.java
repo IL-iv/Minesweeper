@@ -1,4 +1,4 @@
-package com.mcelrea;
+package io.github.some_example_name;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
@@ -64,13 +64,12 @@ public class GameplayScreen implements Screen {
 
         //all drawing of shapes MUST be in between begin/end
         shapeRenderer.begin();
-        shapeRenderer.setColor(1,1,0,1);
-        shapeRenderer.circle(30,30,30);
+
+
         shapeRenderer.end();
 
         //all drawing of graphics MUST be in between begin/end
         spriteBatch.begin();
-
         board.draw(spriteBatch);
 
 
