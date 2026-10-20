@@ -1,6 +1,7 @@
 package io.github.some_example_name;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.GL20;
@@ -57,10 +58,41 @@ public class GameplayScreen implements Screen {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
     }
 
+
+
+
+    private void handleMouseClick(){
+        if(Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)){
+            System.out.println("left click at (" + Gdx.input.getX() + ", " + Gdx.input.getY() + ")");
+            System.out.println(board.getTileAt(Gdx.input.getX(), Gdx.input.getY()));
+            board.uncoverTile(board.getTileAt(Gdx.input.getX(), Gdx.input.getY()));
+        }
+        if(Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)){
+            board.changeFlagStatus(board.getTileAt(Gdx.input.getX(), Gdx.input.getY()));
+
+
+        }
+
+
+    }
+
+
+
+
+
+
+
     //this method runs as fast as it can, repeatedly, constantly looped
     @Override
     public void render(float delta) {
         clearScreen();
+
+        //all user inputs
+
+        handleMouseClick();
+
+
+
 
         //all drawing of shapes MUST be in between begin/end
         shapeRenderer.begin();

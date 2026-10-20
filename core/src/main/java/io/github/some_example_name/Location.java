@@ -4,7 +4,7 @@ public class Location {
     private int row;
     private int column;
 
-    public Location(int column, int row) {
+    public Location(int row, int column) {
         this.column = column;
         this.row = row;
     }
@@ -23,6 +23,14 @@ public class Location {
 
     public void setColumn(int column) {
         this.column = column;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Location location = (Location) o;
+        return row == location.row && col == location.col;
     }
 
 

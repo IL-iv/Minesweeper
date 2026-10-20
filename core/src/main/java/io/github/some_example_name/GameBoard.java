@@ -8,12 +8,14 @@ import io.github.some_example_name.GameplayScreen;
 import javax.swing.plaf.PanelUI;
 import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class GameBoard {
 
     private int[][] board;
     private int numBombs;
     private int numFlags;
+    private int flagCount;
     private static final int BOMB = -1;
     private GameplayScreen gameplayScreen;
     private Texture emptyTile;
@@ -28,24 +30,29 @@ public class GameBoard {
 
     private int YSCREEN = 720;
     private int XSCREEN = 1280;
+    private boolean firstClick;
 
 
     public GameBoard(GameplayScreen gameplayScreen){
         this.gameplayScreen = gameplayScreen;
-        board = new int[10][10];
-        numBombs = 10;
+        board = new int[17][17];
+        numBombs = 43;
         numFlags = numBombs;
+        flagCount = 0;
         loadGraphics();
-        testBoard();
+        firstClick = true;
+
     }
 
-    public GameBoard(GameplayScreen gameplayScreen, int row, int col, int numBombs) {
+    public GameBoard(GameplayScreen gameplayScreen, int row, int col, int numBombs, int numFlags) {
         this.board = new int[row][col];
         this.numBombs = numBombs;
-        this.numFlags = numBombs;
+        this.numFlags = numFlags;
+        this.flagCount = 0;
         this.gameplayScreen = gameplayScreen;
         loadGraphics();
-        testBoard();
+        firstClick = true;
+
     }
 
     public void loadGraphics(){
@@ -85,6 +92,16 @@ public class GameBoard {
     }
 
 
+    public Location getTileAt(int mouseX, int mouseY){
+
+        //all tiles are 25 X 25 pixles
+        //(xOffset, yOffset) is origin
+
+        int row = 18 - (((mouseY - yOffset) / tileSize));  //idk why but the rows are off by 2 so uh- that's getting hardcoded
+        int col = ((mouseX - xOffset) / tileSize);
+        return new Location(row, col);
+    }
+
     public void draw(SpriteBatch spriteBatch){
 
         int yLen = board[0].length * tileSize;
@@ -99,10 +116,12 @@ public class GameBoard {
         for(int row = 0; row < board.length; row++){
             for(int col = 0; col < board[0].length; col++){
 
+                //(xOffset, yOffset) is origin for the board
+
                 int xLoc = xOffset + (tileSize * col);
                 int yLoc = yOffset + (tileSize * row);
                 int value = board[row][col];
-                placeAllBombs();
+
                 if(value <= 8){
                     spriteBatch.draw(emptyTile, xLoc, yLoc);
                 } else if (value == 9) {
@@ -125,22 +144,120 @@ public class GameBoard {
                     spriteBatch.draw(sevenTile, xLoc, yLoc);
                 } else if (value == 18) {
                     spriteBatch.draw(eightTile, xLoc, yLoc);
-                } else if (value == 18) {
-                    spriteBatch.draw(eightTile, xLoc, yLoc);
                 } else if (value >= 19) {
                     spriteBatch.draw(flagTile, xLoc, yLoc);
                 }
-
-                //temp bomb show
-                if(value == -1) spriteBatch.draw(bombTile, xLoc, yLoc);
-
 
             }
         }
     }
 
+    public void uncoverTile(Location loc){
+        int tileVal = board[loc.getRow()][loc.getColumn()];
+
+        if(firstClick) loadBoard(loc);
+        else if(isValid(loc) && tileVal >= -1 && tileVal <= 8) {
+            if(tileVal == 0) floodFillBoard(loc);
+            else board[loc.getRow()][loc.getColumn()] += 10;
+        }
+
+    }
+
+    private void loadBoard(Location loc){
+        int inRow = loc.getRow(), inCol = loc.getColumn();
+        Location[] startStar = new Location[5];
+
+        Location locRowUp = new Location(inRow+1, inCol), locRowDown = new Location(inRow-1, inCol);
+        Location locColUp = new Location(inRow, inCol+1), locColDown = new Location(inRow, inCol-1);
+
+        if(isValid(locRowUp)) startStar[0] = locRowUp;
+        if(isValid(locRowDown)) startStar[1] = locRowDown;
+        if(isValid(locColUp)) startStar[2] = locColUp;
+        if(isValid(locColDown)) startStar[3] = locColDown;
+        startStar[4] = loc;
+
+        placeAllBombs(startStar);
+        numberBoard();
+
+        firstClick = false;
+
+    }
+
+    private void floodFillBoard(Location loc){
+        int inRow = loc.getRow(), inCol = loc.getColumn();
+
+        Location locRowUp = new Location(inRow+1, inCol), locRowDown = new Location(inRow-1, inCol);
+        Location locColUp = new Location(inRow, inCol+1), locColDown = new Location(inRow, inCol-1);
+
+        if(board[inRow][inCol] == 0){
+            board[inRow][inCol] += 10;
+            if(isValid(locRowUp)) floodFillBoard(locRowUp);
+            if(isValid(locRowDown)) floodFillBoard(locRowDown);
+            if(isValid(locColUp)) floodFillBoard(locColUp);
+            if(isValid(locColDown)) floodFillBoard(locColDown);
+        }
+        else if(board[inRow][inCol] <= 8 ) {
+            board[inRow][inCol] += 10;
+            if(isValid(locRowUp) && board[inRow+1][inCol] <= 8 && board[inRow+1][inCol] > 0) board[inRow+1][inCol] += 10;
+            if(isValid(locRowDown) && board[inRow-1][inCol] <= 8 && board[inRow-1][inCol] > 0) board[inRow-1][inCol] += 10;
+            if(isValid(locColUp) && board[inRow][inCol+1] <= 8 && board[inRow][inCol+1] > 0) board[inRow][inCol+1] += 10;
+            if(isValid(locColDown) && board[inRow][inCol-1] <= 8 && board[inRow][inCol-1] > 0) board[inRow][inCol-1] += 10;
+        }
+        return;
+    }
+
+    public void changeFlagStatus(Location loc){
+        if(isValid(loc)){
+            int tileVal = board[loc.getRow()][loc.getColumn()];
+            if(tileVal >= 19) {
+                board[loc.getRow()][loc.getColumn()] -= 20;
+                flagCount--;
+            }else if (tileVal <= 8 && flagCount < numFlags){
+                board[loc.getRow()][loc.getColumn()] += 20;
+                flagCount++;
+            }
+
+        }
+
+    }
+
+
+
+    //bombs
+    private void numberBoard(){
+
+        for(int row = 0; row < board.length; row++){
+            for(int col = 0; col < board[0].length; col++){
+                ArrayList<Location> spots = getNeighbors(new Location(row, col));
+
+                if(board[row][col] != -1){
+                    for(int i = 0 ; i < spots.size(); i++){
+                        Location loc = spots.get(i);
+
+                        if(board[loc.getRow()][loc.getColumn()] == -1){
+                            board[row][col]++;
+
+
+                        }
+
+
+                    }
+
+
+
+                }
+
+
+            }
+        }
+
+
+
+    }
+
+
     private boolean isValid(Location loc){
-        return (loc.getRow() < board.length) && (loc.getRow() > -1) && (loc.getColumn() < board[0].length) && (loc.getColumn() > -1);
+        return  (loc.getRow() > -1) && (loc.getRow() < board.length) && (loc.getColumn() > -1) && (loc.getColumn() < board[0].length);
     }
 
     private ArrayList<Location> getNeighbors(Location loc){
@@ -157,7 +274,7 @@ public class GameBoard {
     }
 
 
-    public void placeAllBombs(){
+    public void placeAllBombs(Location[] locs){
 
         for(int i =0; i < numBombs; i++) {
             boolean unique = false;
@@ -166,8 +283,9 @@ public class GameBoard {
                 int randRow = (int) (Math.random() * (board.length));
                 int randCol = (int) (Math.random() * (board[0].length));
 
-                unique = board[randRow][randCol] == -1;
-                board[randRow][randCol] = -1;
+                unique = (board[randRow][randCol] != -1) && !(Arrays.asList(locs).contains(new Location(randRow, randCol)));
+                if(unique) board[randRow][randCol] = -1;
+                if(unique) System.out.println("should work lol" + Arrays.stream(locs).noneMatch(l -> l.equals(new Location(randRow, randCol))));
             }
         }
 
