@@ -30,7 +30,7 @@ public class Location {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Location location = (Location) o;
-        return row == location.row && col == location.col;
+        return row == location.row && column == location.column;
     }
 
 

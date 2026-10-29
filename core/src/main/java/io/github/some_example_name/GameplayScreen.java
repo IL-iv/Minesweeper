@@ -3,14 +3,24 @@ package io.github.some_example_name;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.utils.Timer.Task;
+
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+
 import io.github.some_example_name.GameBoard;
+
+
+import java.util.SplittableRandom;
+import java.util.Timer;
+
 
 public class GameplayScreen implements Screen {
 
@@ -29,6 +39,21 @@ public class GameplayScreen implements Screen {
     //control how the camera views the world
     //zoom in/out? Keep everything scaled?
     private Viewport viewport;
+
+    //sounds
+    private Sound dig;
+    private Sound dig2;
+    private Sound dig3;
+    private Sound dig4;
+    private Sound boom;
+    private Sound boom2;
+    private Sound boom3;
+    private Sound boom4;
+
+    private Sound flag;
+    private Sound flag2;
+    private Sound flag3;
+
 
     //Game Variables
     GameBoard board;
@@ -51,6 +76,25 @@ public class GameplayScreen implements Screen {
 
         board = new GameBoard(this);
 
+        dig = Gdx.audio.newSound(Gdx.files.internal("Grass_dig1.wav"));
+        dig2 = Gdx.audio.newSound(Gdx.files.internal("Grass_dig2.wav"));
+        dig3 = Gdx.audio.newSound(Gdx.files.internal("Grass_dig3.wav"));
+        dig4 = Gdx.audio.newSound(Gdx.files.internal("Grass_dig4.wav"));
+
+        boom = Gdx.audio.newSound(Gdx.files.internal("Explosion1.wav"));
+        boom2 = Gdx.audio.newSound(Gdx.files.internal("Explosion2.wav"));
+        boom3 = Gdx.audio.newSound(Gdx.files.internal("Explosion3.wav"));
+        boom4 = Gdx.audio.newSound(Gdx.files.internal("Explosion4.wav"));
+
+        flag = Gdx.audio.newSound(Gdx.files.internal("Cloth_dig1.ogg.mp3"));
+        flag2 = Gdx.audio.newSound(Gdx.files.internal("Cloth_dig2.ogg.mp3"));
+        flag3 = Gdx.audio.newSound(Gdx.files.internal("Cloth_jump1.wav.mp3"));
+
+        stone = Gdx.audio.newSound(Gdx.files.internal("Stone_hit1.ogg"));
+        stone2 = Gdx.audio.newSound(Gdx.files.internal("Stone_hit5.ogg"));
+
+
+
     }
 
     public void clearScreen() {
@@ -63,13 +107,64 @@ public class GameplayScreen implements Screen {
 
     private void handleMouseClick(){
         if(Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)){
-            System.out.println("left click at (" + Gdx.input.getX() + ", " + Gdx.input.getY() + ")");
-            System.out.println(board.getTileAt(Gdx.input.getX(), Gdx.input.getY()));
-            board.uncoverTile(board.getTileAt(Gdx.input.getX(), Gdx.input.getY()));
+            //System.out.println("left click at (" + Gdx.input.getX() + ", " + Gdx.input.getY() + ")");
+            //System.out.println(board.getTileAt(Gdx.input.getX(), Gdx.input.getY()));
+            Location spot = board.getTileAt(Gdx.input.getX(), Gdx.input.getY());
+
+            int pickSound = (int) (Math.random() * 4) + 1;
+
+            //fix this, make a get valuse method
+            if(board.board[spot.getRow()][spot.getColumn()] > -1 && board.board[spot.getRow()][spot.getColumn()] < 2){
+                if(pickSound == 1) dig.play();
+                else if(pickSound == 2) dig2.play();
+                else if(pickSound == 3) dig3.play();
+                else if(pickSound == 4) dig4.play();
+                //maybe make higher value tiles make a stone / different sound
+            }
+
+            else if(board.board[spot.getRow()][spot.getColumn()] > 1 && board.board[spot.getRow()][spot.getColumn()] < 4){
+                if(pickSound == 1) dig.play();
+                else if(pickSound == 2) dig2.play();
+                else if(pickSound == 3) dig3.play();
+                else if(pickSound == 4) dig4.play();
+                //maybe make higher value tiles make a stone / different sound
+            }
+
+            else if(board.board[spot.getRow()][spot.getColumn()] == -1){
+
+                boom.play();
+
+                com.badlogic.gdx.utils.Timer.instance().scheduleTask(new com.badlogic.gdx.utils.Timer.Task() {
+                    @Override
+                    public void run() {
+                        boom2.play();
+                    }
+                }, 1.0f); //1.0 second delay
+
+                com.badlogic.gdx.utils.Timer.instance().scheduleTask(new com.badlogic.gdx.utils.Timer.Task() {
+                    @Override
+                    public void run() {
+                        boom4.play();
+                    }
+                }, 0.75f);
+
+                com.badlogic.gdx.utils.Timer.instance().scheduleTask(new com.badlogic.gdx.utils.Timer.Task() {
+                    @Override
+                    public void run() {
+                        boom3.play();
+                    }
+                }, 0.5f);
+            }
+
+            board.uncoverTile(spot);
+
         }
         if(Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)){
+            int pickSound = (int) (Math.random() * 3) + 1;
             board.changeFlagStatus(board.getTileAt(Gdx.input.getX(), Gdx.input.getY()));
-
+            if(pickSound == 1) flag.play();
+            else if(pickSound == 2) flag2.play();
+            else if(pickSound == 3) flag3.play();
 
         }
 
