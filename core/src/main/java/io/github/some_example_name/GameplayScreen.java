@@ -8,13 +8,15 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.Timer.Task;
 
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-
+import com.badlogic.gdx.graphics.Color;
 import io.github.some_example_name.GameBoard;
 
 
@@ -54,6 +56,14 @@ public class GameplayScreen implements Screen {
     private Sound flag2;
     private Sound flag3;
 
+    private Sound stone;
+    private Sound stone2;
+    private Sound stone3;
+    private Sound stone4;
+
+    private FreeTypeFontGenerator mainFont;
+    private BitmapFont titleFont;
+    private BitmapFont infoFont;
 
     //Game Variables
     GameBoard board;
@@ -74,6 +84,18 @@ public class GameplayScreen implements Screen {
         shapeRenderer = new ShapeRenderer();
         shapeRenderer.setAutoShapeType(true); //???, I just know that this was the solution to an annoying problem
 
+        mainFont = new FreeTypeFontGenerator(Gdx.files.internal("GalaferaMedium-V4xze.ttf"));
+        FreeTypeFontGenerator.FreeTypeFontParameter parameter =
+            new FreeTypeFontGenerator.FreeTypeFontParameter();
+        parameter.size = 24;
+        parameter.color = Color.WHITE;
+        parameter.borderWidth = 2f;
+        infoFont = mainFont.generateFont(parameter);
+
+        parameter.size = 48;
+        parameter.borderWidth = 0;
+        titleFont = mainFont.generateFont(parameter);
+
         board = new GameBoard(this);
 
         dig = Gdx.audio.newSound(Gdx.files.internal("Grass_dig1.wav"));
@@ -92,8 +114,8 @@ public class GameplayScreen implements Screen {
 
         stone = Gdx.audio.newSound(Gdx.files.internal("Stone_hit1.ogg"));
         stone2 = Gdx.audio.newSound(Gdx.files.internal("Stone_hit5.ogg"));
-
-
+        stone3 = Gdx.audio.newSound(Gdx.files.internal("Stone_dig4.ogg.mp3"));
+        stone4 = Gdx.audio.newSound(Gdx.files.internal("Stone_mining5.ogg.mp3"));
 
     }
 
@@ -123,10 +145,10 @@ public class GameplayScreen implements Screen {
             }
 
             else if(board.board[spot.getRow()][spot.getColumn()] > 1 && board.board[spot.getRow()][spot.getColumn()] < 4){
-                if(pickSound == 1) dig.play();
-                else if(pickSound == 2) dig2.play();
-                else if(pickSound == 3) dig3.play();
-                else if(pickSound == 4) dig4.play();
+                if(pickSound == 1) stone.play();
+                else if(pickSound == 2) stone2.play();
+                else if(pickSound == 3) stone3.play();
+                else if(pickSound == 4) stone4.play();
                 //maybe make higher value tiles make a stone / different sound
             }
 
@@ -152,6 +174,10 @@ public class GameplayScreen implements Screen {
                     @Override
                     public void run() {
                         boom3.play();
+
+
+
+
                     }
                 }, 0.5f);
             }
@@ -198,6 +224,20 @@ public class GameplayScreen implements Screen {
         //all drawing of graphics MUST be in between begin/end
         spriteBatch.begin();
         board.draw(spriteBatch);
+
+
+        board.draw(spriteBatch);
+        titleFont.draw(spriteBatch, "Minesweeper", 120, 610);
+        infoFont.draw(spriteBatch, "Flags left: " + (board.numFlags-board.flagCount), 550, 550);
+
+        if(!board.gameOn){
+
+
+            infoFont.draw(spriteBatch, "Press on the board to replay!", 550, 500);
+
+        }
+
+
 
 
         spriteBatch.end();

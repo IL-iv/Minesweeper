@@ -9,8 +9,8 @@ public class GameBoard {
 
     public int[][] board;
     private int numBombs;
-    private int numFlags;
-    private int flagCount;
+    public int numFlags;
+    public int flagCount;
     private static final int BOMB = -1;
     private GameplayScreen gameplayScreen;
     private Texture emptyTile;
@@ -26,7 +26,7 @@ public class GameBoard {
     private int YSCREEN = 720;
     private int XSCREEN = 1280;
     private boolean firstClick;
-    private boolean gameOn;
+    public boolean gameOn;
 
     public GameBoard(GameplayScreen gameplayScreen){
         this.gameplayScreen = gameplayScreen;
